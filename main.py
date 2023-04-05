@@ -197,6 +197,37 @@ def draw(window, background, bg_image, player, objects, offset_x):  # funkcija o
     pygame.display.update()
 
 
+def handle_vertical_collision(player, objects, dy):
+    collided_objects = []
+
+    for obj in objects:  # iterēt cauri katram objektam objektu sarakstā
+        if pygame.sprite.collide_mask(player, obj):  # pārbauda, vai spēlētājs saskaras ar objektu
+            if dy > 0:  # pārbauda, vai spēlētājs pārvietojas uz leju
+                player.rect.bottom = obj.rect.top  # iestaja spēlētāja apakšdaļu uz sadursmes objekta augšdaļu.
+                player.landed()  # iestaja spēlētāja statusu landed
+            elif dy < 0:  # pārbauda, vai spēlētājs pārvietojas uz augšu
+                player.rect.top = obj.rect.bottom  # iestaja spēlētāja augšdaļu uz sadursmes objekta apakšdaļu
+                player.hit_head()  # iestaja spēlētāja statusu uz hit head
+
+            collided_objects.append(obj)  # pievieno objektu, ar kuru notikusi sadursme, sadurto objektu sarakstam
+
+    return collided_objects  # atgrieza sadūrušos objektu sarakstu
+
+
+def collide(player, objects, dx):
+    player.move(dx, 0)  # pārvieto spēlētāju horizontāli par dx
+    player.update()  # atjaunina spēlētāja rect un attēlu
+    collided_object = None  # inicialize sadursmes objektu kā None
+    for obj in objects:  # itere cauri katram objektam objektu sarakstā
+        if pygame.sprite.collide_mask(player, obj):  # pārbauda, vai spēlētājs saskaras ar objektu
+            collided_object = obj  # iestaja sadursmes objektu kā pašreizējo objektu
+            break  # iziet no cikla
+
+    player.move(-dx, 0)  # pārvieto spēlētāju atpakaļ par -dx
+    player.update()  # atjaunina spēlētāja rect un attēlu
+    return collided_object  # atgrieza sadursmes objektu
+
+
 def handle_move(player, objects):
     keys = pygame.key.get_pressed()  # iegūt nospiestos taustiņus
 
