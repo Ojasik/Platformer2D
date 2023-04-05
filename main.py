@@ -152,8 +152,27 @@ def draw(window, background, bg_image, player, objects, offset_x):  # funkcija o
     pygame.display.update()
 
 
+def handle_move(player, objects):
+    keys = pygame.key.get_pressed()  # iegūt nospiestos taustiņus
 
-def main(window):  #galvenais logs, atbild par spēlēs uzsākšanu (iestatījumi)
+    player.x_vel = 0  # spēlētāja sākotnējā ātruma iestatīšana uz nulli.
+    collide_left = collide(player, objects, -PLAYER_VEL * 2)  # pārbauda vai spēlētājs saskaras ar objektu pa kreisi vai pa labi.
+    collide_right = collide(player, objects, PLAYER_VEL * 2)  # pārbauda, vai spēlētājs saskaras ar objektu pa kreisi vai pa labi.
+
+    if keys[pygame.K_LEFT] and not collide_left:  # ja spēlētājs nospiež kreisās bulttaustiņu taustiņu un nesaskaras ar objektu pa kreisi, pārvietojiet spēlētāju pa kreisi.
+        player.move_left(PLAYER_VEL)
+    if keys[pygame.K_RIGHT] and not collide_right:  # ja spēlētājs nospiež labās bulttaustiņu taustiņu un nesaskaras ar objektu labajā pusē, pārvietojiet spēlētāju pa labi.
+        player.move_right(PLAYER_VEL)
+
+    vertical_collide = handle_vertical_collision(player, objects, player.y_vel)  # pārbauda, vai spēlētājam nav vertikālu saskares ar objektiem.
+    to_check = [collide_left, collide_right, *vertical_collide] # izveido objektu sarakstu, lai pārbaudītu saskares esamību
+
+    for obj in to_check:  # pārbauda, vai kāds no to_check sarakstā esošajiem objektiem ir "fire" objekts, un, ja tas tā ir, tad spēlētājam tiek nodarīts kaitējums.
+        if obj and obj.name == "fire":
+            player.make_hit()
+
+
+def main(window):  # galvenais logs, atbild par spēlēs uzsākšanu (iestatījumi)
     clock = pygame.time.Clock()
 
     run = True
