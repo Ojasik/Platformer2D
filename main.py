@@ -44,6 +44,15 @@ def load_sprite_sheets(dir1, dir2, width, height, direction=False):  # definē f
     return all_sprites  # Atgriež visu sprites vārdnīcu
 
 
+def get_block(size):
+    path = join("assets", "Terrain", "Terrain.png")  # attēla faila ceļa noteikšana
+    image = pygame.image.load(path).convert_alpha()  # ielāde attēlu un konverte to alfa formātā
+    surface = pygame.Surface((size, size), pygame.SRCALPHA, 32)  # izveido jaunu virsmu ar norādīto izmēru un alfa kanālu
+    rect = pygame.Rect(96, 0, size, size)  # izveido taisnstūra objektu ar norādīto izmēru un pozīciju attēlā
+    surface.blit(image, (0, 0), rect)  # attēla daļas, ko nosaka taisnstūra objekts, pārklāšana uz jaunās virsmas
+    return pygame.transform.scale2x(surface)  # mēroga virsmas mērogošana ar koeficientu 2, izmantojot bilineāro interpolāciju
+
+
 class Player(pygame.sprite.Sprite):
     COLOR = (255, 0, 0)
     GRAVITY = 1  # piespiež spēlētāju uz leju
@@ -154,6 +163,15 @@ class Object(pygame.sprite.Sprite):  # izveido spēles objektu (konstruktors).
         win.blit(self.image, (self.rect.x - offset_x, self.rect.y))
 
 
+class Block(Object):
+    def __init__(self, x, y, size):
+        super().__init__(x, y, size, size)  # inicialize vecāku klasi Objekts ar pozīciju (x, y) un izmēriem (size, size)
+        block = get_block(size)  # bloka attēla ielāde ar norādīto izmēru
+        self.image.blit(block, (0, 0))  # attēla pārklāšana uz bloka objekta attēla
+        self.mask = pygame.mask.from_surface(self.image)  # izveido sadursmes masku no attēla
+
+
+
 def get_background(name):  # funkcija, lai iegūtu fona elementus un attēlu
     image = pygame.image.load(join("assets", "Background", name))
     _, _, width, height = image.get_rect()
@@ -207,7 +225,14 @@ def main(window):  # galvenais logs, atbild par spēlēs uzsākšanu (iestatīju
         clock.tick(FPS)
         background, bg_image = get_background("Purple.png")
 
+        block_size = 96
+
         player = Player(100, 100, 50, 50)
+
+        floor = [Block(i * block_size, HEIGHT - block_size, block_size)
+                 for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)]
+        objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),
+                   Block(block_size * 3, HEIGHT - block_size * 4, block_size), fire]
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
