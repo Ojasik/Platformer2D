@@ -175,6 +175,36 @@ class Block(Object):
         self.mask = pygame.mask.from_surface(self.image)  # izveido sadursmes masku no attēla
 
 
+class Fire(Object):
+    ANIMATION_DELAY = 3  # iestata animācijas aizkavi sprite lapai
+
+    def __init__(self, x, y, width, height):  # define Fire klases konstruktora metodi
+        super().__init__(x, y, width, height, "fire")  # izsauca Object klases konstruktora metodi un nododiet Fire objekta īpašības
+        self.fire = load_sprite_sheets("Traps", "Fire", width, height)  # Fire sprite lapas ielāde no resursu mapes, izmantojot palīgfunkciju load_sprite_sheets
+        self.image = self.fire["off"][0]  # Fire objekta sākotnējā attēla iestatīšana
+        self.mask = pygame.mask.from_surface(self.image)  # izveido Fire objekta masku no attēla virsmas
+        self.animation_count = 0  # iestaja animāciju skaitu uz 0
+        self.animation_name = "off"  # sākotnējās animācijas nosaukuma iestatīšana uz "off"
+
+    def on(self):  # define metodi, lai ieslēgtu Fire objektu
+        self.animation_name = "on"  # iestaja animācijas nosaukumu "on"
+
+    def off(self):  # define metodi Fire objekta izslēgšanai
+        self.animation_name = "off"  # iestaja animācijas nosaukumu "off"
+
+    def loop(self):  # define Fire objekta galvenās cikla metodi
+        sprites = self.fire[self.animation_name]  # iegūsta pašreizējās animācijas sprites no Fire sprites lapas
+        sprite_index = (self.animation_count //  # aprēķina pašreizējo sprīta indeksu, pamatojoties uz animāciju skaitu un animācijas aizkavi.
+                        self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]  # Fire objekta pašreizējā attēla iestatīšana uz pašreizējo sprite
+        self.animation_count += 1  # palielina animāciju skaitu
+
+        self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))  # atjaunina Fire objekta taisnstūra pozīciju uz pašreizējo pozīciju
+        self.mask = pygame.mask.from_surface(self.image)  # atjaunina Fire objekta masku no jaunās attēla virsmas
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):  # atiestata animāciju skaitu, ja tas pārsniedz animācijā iekļauto sprites skaitu
+            self.animation_count = 0
+
 
 def get_background(name):  # funkcija, lai iegūtu fona elementus un attēlu
     image = pygame.image.load(join("assets", "Background", name))
@@ -252,39 +282,41 @@ def handle_move(player, objects):
             player.make_hit()
 
 
-def main(window):  # galvenais logs, atbild par spēlēs uzsākšanu (iestatījumi)
+def main(window):  # galvenais logs, atbild par spēlēs uzsākšanu un ielādešanu (iestatījumi)
     clock = pygame.time.Clock()
 
     run = True
     while run:
         clock.tick(FPS)
-        background, bg_image = get_background("Purple.png")
+        background, bg_image = get_background("Purple.png")  # ielāde fonu
 
-        block_size = 96
+        block_size = 96  # bloka izmers
 
-        player = Player(100, 100, 50, 50)
-
+        player = Player(100, 100, 50, 50)  # spēlētaja objekts
+        fire = Fire(100, HEIGHT - block_size - 64, 16, 32)  # uguns objekts
+        fire.on()  #uguns ir ieslēgts
         floor = [Block(i * block_size, HEIGHT - block_size, block_size)
                  for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)]
         objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),
                    Block(block_size * 3, HEIGHT - block_size * 4, block_size), fire]
 
         offset_x = 0
-        scroll_area_width = 200
+        scroll_area_width = 200  # scroll platums
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 break
 
-        if event.type == pygame.KEYDOWN:
+        if event.type == pygame.KEYDOWN:  # ja spēlētājs spied SPACE, tad viņs lec
             if event.key == pygame.K_SPACE and player.jump_count < 2:
                 player.jump()
 
-    player.loop(FPS)
-    handle_move(player, objects)
-    draw(window, background, bg_image, player, objects, offset_x)
+    player.loop(FPS)  # atjauno spēlētāju
+    handle_move(player, objects)  # apstrāda spēlētāja kustību
+    draw(window, background, bg_image, player, objects, offset_x)  # zīme spēles objektus
 
+    # Atjaunina spēles vides horizontālo nobīdi, ja spēlētājs pārvietojas tuvu ekrāna malai.
     if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel > 0) or (
             (player.rect.left - offset_x <= scroll_area_width) and player.x_vel < 0):
         offset_x += player.x_vel
@@ -292,5 +324,5 @@ def main(window):  # galvenais logs, atbild par spēlēs uzsākšanu (iestatīju
     pygame.quit()
     quit()
 
-    if __name__ == "__main__":
+    if __name__ == "__main__":  # Izsauca galveno funkciju, lai sāktu spēli
         main(window)
