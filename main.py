@@ -269,6 +269,9 @@ def main(window):  # galvenais logs, atbild par spēlēs uzsākšanu (iestatīju
         objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),
                    Block(block_size * 3, HEIGHT - block_size * 4, block_size), fire]
 
+        offset_x = 0
+        scroll_area_width = 200
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -282,6 +285,9 @@ def main(window):  # galvenais logs, atbild par spēlēs uzsākšanu (iestatīju
     handle_move(player, objects)
     draw(window, background, bg_image, player, objects, offset_x)
 
+    if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel > 0) or (
+            (player.rect.left - offset_x <= scroll_area_width) and player.x_vel < 0):
+        offset_x += player.x_vel
 
     pygame.quit()
     quit()
