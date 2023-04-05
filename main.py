@@ -9,7 +9,6 @@ pygame.init()  # inicializē pygame moduli
 
 pygame.display.set_caption("2D Platformer") # nosaka loga virsrakstu
 
-BG_COLOR = (255, 255, 255) # nosaka fona krāsu
 WIDTH, HEIGHT = 1000, 800 # nosaka ekrāna izmēru
 FPS = 60 # nosaka bilžu attēlošanas ātrumu
 PLAYER_VEL = 5 # nosaka spēlētāja ātrumu
@@ -284,45 +283,46 @@ def handle_move(player, objects):
 
 def main(window):  # galvenais logs, atbild par spēlēs uzsākšanu un ielādešanu (iestatījumi)
     clock = pygame.time.Clock()
+    background, bg_image = get_background("Purple.png")  # ielāde fonu
+
+    block_size = 96  # bloka izmers
+
+    player = Player(100, 100, 50, 50)  # spēlētaja objekts
+    fire = Fire(100, HEIGHT - block_size - 64, 16, 32)  # uguns objekts
+    fire.on()
+    floor = [Block(i * block_size, HEIGHT - block_size, block_size)
+             for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)]
+    objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),
+               Block(block_size * 3, HEIGHT - block_size * 4, block_size), fire]
+
+    offset_x = 0
+    scroll_area_width = 200  # scroll platums
 
     run = True
     while run:
         clock.tick(FPS)
-        background, bg_image = get_background("Purple.png")  # ielāde fonu
-
-        block_size = 96  # bloka izmers
-
-        player = Player(100, 100, 50, 50)  # spēlētaja objekts
-        fire = Fire(100, HEIGHT - block_size - 64, 16, 32)  # uguns objekts
-        fire.on()  #uguns ir ieslēgts
-        floor = [Block(i * block_size, HEIGHT - block_size, block_size)
-                 for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)]
-        objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),
-                   Block(block_size * 3, HEIGHT - block_size * 4, block_size), fire]
-
-        offset_x = 0
-        scroll_area_width = 200  # scroll platums
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 break
 
-        if event.type == pygame.KEYDOWN:  # ja spēlētājs spied SPACE, tad viņs lec
-            if event.key == pygame.K_SPACE and player.jump_count < 2:
-                player.jump()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and player.jump_count < 2:
+                    player.jump()
 
-    player.loop(FPS)  # atjauno spēlētāju
-    handle_move(player, objects)  # apstrāda spēlētāja kustību
-    draw(window, background, bg_image, player, objects, offset_x)  # zīme spēles objektus
+        player.loop(FPS)  # atjauno spēlētāju
+        fire.loop()  # atjauno uguni
+        handle_move(player, objects)  # apstrāda spēlētāja kustību
+        draw(window, background, bg_image, player, objects, offset_x)  # zīme spēles objektus
 
-    # Atjaunina spēles vides horizontālo nobīdi, ja spēlētājs pārvietojas tuvu ekrāna malai.
-    if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel > 0) or (
-            (player.rect.left - offset_x <= scroll_area_width) and player.x_vel < 0):
-        offset_x += player.x_vel
+        if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel > 0) or (
+                (player.rect.left - offset_x <= scroll_area_width) and player.x_vel < 0):
+            offset_x += player.x_vel
 
     pygame.quit()
     quit()
 
-    if __name__ == "__main__":  # Izsauca galveno funkciju, lai sāktu spēli
-        main(window)
+
+if __name__ == "__main__":  # Izsauca galveno funkciju, lai sāktu spēli
+    main(window)
