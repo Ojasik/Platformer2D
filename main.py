@@ -17,6 +17,10 @@ PLAYER_VEL = 5 # nosaka spēlētāja ātrumu
 window = pygame.display.set_mode((WIDTH, HEIGHT))  # izveido spēles logu ar definētu izmēru
 
 
+def flip(sprites):  # šī funkcija atgriež sarakstu ar horizontāli apgrieztiem sprites.
+    return [pygame.transform.flip(sprite, True, False) for sprite in sprites]  # atgriež sprites
+
+
 def load_sprite_sheets(dir1, dir2, width, height, direction=False):  # definē funkciju, lai ielādētu sprite lapas
     path = join("assets", dir1, dir2)  # konstruē ceļu uz sprite lapu
     images = [f for f in listdir(path) if isfile(join(path, f))]
@@ -269,6 +273,10 @@ def main(window):  # galvenais logs, atbild par spēlēs uzsākšanu (iestatīju
             if event.type == pygame.QUIT:
                 run = False
                 break
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE and player.jump_count < 2:
+                player.jump()
 
     player.loop(FPS)
     handle_move(player, objects)
