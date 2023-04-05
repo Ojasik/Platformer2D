@@ -17,6 +17,33 @@ PLAYER_VEL = 5 # nosaka spēlētāja ātrumu
 window = pygame.display.set_mode((WIDTH, HEIGHT))  # izveido spēles logu ar definētu izmēru
 
 
+def load_sprite_sheets(dir1, dir2, width, height, direction=False):  # definē funkciju, lai ielādētu sprite lapas
+    path = join("assets", dir1, dir2)  # konstruē ceļu uz sprite lapu
+    images = [f for f in listdir(path) if isfile(join(path, f))]
+
+    all_sprites = {} # uzskaita visus direktorijā esošos failus
+
+    for image in images:  # loops caur visiem attēliem, kas atrasti direktorijā
+        sprite_sheet = pygame.image.load(join(path, image)).convert_alpha()  # ielādē attēlu kā sprite lapu
+
+        sprites = []  # inicializē tukšu sarakstu, kurā tiek saglabāti visi sprites, kas iegūti no sprite lapas.
+        for i in range(sprite_sheet.get_width() // width):  # Izraksta katru sprite no sprite lapas un pievieno to sprite sarakstam.
+            surface = pygame.Surface((width, height), pygame.SRCALPHA, 32)
+            rect = pygame.Rect(i * width, 0, width, height)
+            surface.blit(sprite_sheet, (0, 0), rect)
+            sprites.append(pygame.transform.scale2x(surface))
+
+        # ja virziena karodziņš ir iestatīts uz True, pievieno sprites vārdnīcai ar nosaukumu
+        # "[sprite_name]_right" and "[sprite_name]_left"
+        if direction:
+            all_sprites[image.replace(".png", "") + "_right"] = sprites
+            all_sprites[image.replace(".png", "") + "_left"] = flip(sprites)
+        else:  # pretējā gadījumā pievieno sprites vārdnīcai ar nosaukumu "[sprite_name]".
+            all_sprites[image.replace(".png", "")] = sprites
+
+    return all_sprites  # Atgriež visu sprites vārdnīcu
+
+
 class Player(pygame.sprite.Sprite):
     COLOR = (255, 0, 0)
     GRAVITY = 1  # piespiež spēlētāju uz leju
@@ -178,11 +205,19 @@ def main(window):  # galvenais logs, atbild par spēlēs uzsākšanu (iestatīju
     run = True
     while run:
         clock.tick(FPS)
+        background, bg_image = get_background("Purple.png")
+
+        player = Player(100, 100, 50, 50)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 break
+
+    player.loop(FPS)
+    handle_move(player, objects)
+    draw(window, background, bg_image, player, objects, offset_x)
+
 
     pygame.quit()
     quit()
